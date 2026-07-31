@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Yardle All Businesses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+ :root {
+   --blueprint: #0c1f33;
+   --blueprint-line: #17324d;
+   --panel: #10263e;
+   --steel: #7fa8c9;
+   --rivet: #4a90d9;
+   --rust: #e2833f;
+   --paper: #eef1e8;
+   --dim: #6d879e;
+ }
+ * { box-sizing: border-box; }
+ html, body { margin: 0; padding: 0; }
+ body {
+   background-color: var(--blueprint);
+   background-image:
+     linear-gradient(var(--blueprint-line) 1px, transparent 1px),
+     linear-gradient(90deg, var(--blueprint-line) 1px, transparent 1px);
+   background-size: 28px 28px;
+   color: var(--paper);
+   font-family: 'IBM Plex Mono', monospace;
+   min-height: 100vh;
+   padding: 32px 16px 80px;
+ }
+ .wrap { max-width: 900px; margin: 0 auto; }
+ .eyebrow {
+   color: var(--rust);
+   font-size: 12px;
+   letter-spacing: 3px;
+   text-transform: uppercase;
+   margin-bottom: 6px;
+ }
+ h1 {
+   font-family: 'Archivo', sans-serif;
+   font-weight: 800;
+   font-size: 30px;
+   margin: 0 0 18px;
+   letter-spacing: -0.5px;
+ }
+ #controls {
+   display: flex;
+   gap: 10px;
+   margin-bottom: 20px;
+   flex-wrap: wrap;
+ }
+ #search {
+   flex: 1;
+   min-width: 220px;
+   padding: 10px 14px;
+   font-size: 14px;
+   font-family: 'IBM Plex Mono', monospace;
+   border-radius: 4px;
+   border: 1px solid var(--rivet);
+   background: var(--panel);
+   color: var(--paper);
+   outline: none;
+ }
+ #count {
+   align-self: center;
+   color: var(--dim);
+   font-size: 12px;
+   letter-spacing: 1px;
+ }
+ #status { color: var(--rust); font-size: 13px; }
+ .group { margin-bottom: 22px; }
+ .group-header {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   padding: 10px 14px;
+   border-radius: 6px 6px 0 0;
+   font-family: 'Archivo', sans-serif;
+   font-weight: 700;
+   font-size: 14px;
+   color: #fff;
+ }
+ .group-count {
+   font-weight: 500;
+   font-size: 12px;
+   opacity: 0.85;
+   margin-left: auto;
+ }
+ 
+ table {
+   width: 100%;
+   border-collapse: collapse;
+   table-layout: fixed;
+   box-shadow: 0 0 35px rgba(8, 0, 244, 0.299);
+ }
+ th:nth-child(1), td:nth-child(1) { width: 42%; }
+ th:nth-child(2), td:nth-child(2) { width: 16%; }
+ th:nth-child(3), td:nth-child(3) { width: 20%; }
+ th:nth-child(4), td:nth-child(4) { width: 22%; }
+ th, td {
+   text-align: left;
+   padding: 9px 14px;
+   font-size: 13px;
+   border-bottom: 1px solid var(--blueprint-line);
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+   vertical-align: middle;
+ }
+ th {
+   color: var(--dim);
+   font-size: 10.5px;
+   letter-spacing: 1.5px;
+   text-transform: uppercase;
+   background: var(--panel);
+ }
+ tr:hover td { background: rgba(79,140,255,0.06); }
+ td.name { font-family: 'Archivo', sans-serif; font-weight: 700; }
+ tbody { background: var(--panel); }
+ .linkButtons {
+   display: flex;
+   gap: 14px;
+   justify-content: center;
+   margin-top: 44px;
+   flex-wrap: wrap;
+ }
+ .header-bar {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ margin-bottom: 1.0rem;
+}
+.header-bar h1 {
+   margin: 0;
+   line-height: 1.2;
+}
+.linkButtonsTop {
+ display: flex;
+ gap: 0.5rem;
+ align-items: center;
+}
+
+.website-btn {
+   display: inline-block;
+   padding: 6px 10px;
+   background: rgba(79,140,255,0.16);
+   color: var(--rivet);
+   border-radius: 6px;
+   text-decoration: none;
+   font-size: 11px;
+   font-weight: 700;
+   letter-spacing: 0.5px;
+   text-transform: uppercase;
+   border: 1px solid var(--rivet);
+   transition: 0.15s ease;
+   white-space: nowrap;
+   box-shadow: 0 0 6px rgba(94, 75, 218, 0.538);   
+}
+.website-btn:hover {
+ background: rgba(79,140,255,0.28);
+}
+ .smallBtn {
+   display: inline-flex;
+   align-items: center;
+   padding: 10px 15px;
+   font-family: 'Archivo', sans-serif;
+   font-weight: 700;
+   font-size: 11px;
+   border-radius: 6px;
+   text-decoration: none;
+   background: var(--rust);
+   color: var(--paper);
+   letter-spacing: 0.5px;
+ }
+ .smallBtn.secondary {
+   background: transparent;
+   border: 1px solid var(--rust);
+   color: var(--paper);
+ }
+ .bigBtn {
+   display: inline-block;
+   align-items: center;
+   padding: 16px 30px;
+   font-family: 'Archivo', sans-serif;
+   font-weight: 700;
+   font-size: 16px;
+   border-radius: 6px;
+   text-decoration: none;
+   background: var(--rust);
+   color: var(--paper);
+   letter-spacing: 0.5px;
+ }
+ .bigBtn.secondary {
+   background: transparent;
+   border: 2px solid var(--rust);
+   color: var(--paper);
+ }
+ .bigBtn:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="eyebrow">Brooklyn Navy Yard Development Corp.</div>
+<div class="header-bar">
+<h1>All Yard Businesses</h1>
+<div class="linkButtonsTop">
+<a href="index.html" class="smallBtn">← Back to Yardle</a>
+<a href="https://www.brooklynnavyyard.org/" target="_blank" rel="noopener" class="smallBtn secondary">BNYDC.org ↗</a>
+</div>
+</div>
+<div id="status">Loading businesses.csv…</div>
+<div id="controls" style="display:none;">
+<input id="search" placeholder="Search by name, building, or category…" autocomplete="off" />
+<div id="count"></div>
+</div>
+<div id="groups"></div>
+<div class="linkButtonsBottom">
+<a href="index.html" class="bigBtn">← Back to Yardle</a>
+<a href="https://www.brooklynnavyyard.org/" target="_blank" rel="noopener" class="bigBtn secondary">BNYDC.org ↗</a>
+</div>
+</div>
+<script>
+const CSV_PATH = 'businesses.csv';
+let businesses = [];
+const INDUSTRIES = [
+ "CNC Bridge Resource","Advanced Manufacturing","Administrative","Adult Training","Construction",
+ "Culinary","Engineering","Finance","Industrial","Internship","Resume Assistance","Retail","Security",
+ "Warehouse","Not Applicable","Hardware & Software & Design Engineering","Power & Energy",
+ "Biotech & Lab & Medtech","Fabrication & Custom Installation","Architecture & Design",
+ "Contracting & Construction","Transportation","Printing & Engraving","Furniture & Home Goods",
+ "Apparel & Accessory","Food & Beverage","Beauty & Personal Care","Healthcare",
+ "Fine Art & Photography","Creative Office & Media","Other / Professional Services","Education & Nonprofit"
+];
+function industryColor(name) {
+ const idx = INDUSTRIES.findIndex(i => i.toLowerCase() === (name || '').trim().toLowerCase());
+ if (idx === -1) return 'hsl(210, 12%, 38%)';
+ const hue = Math.round(idx * (360 / INDUSTRIES.length));
+ return `hsl(${hue}, 62%, 40%)`;
+}
+function parseCSV(text) {
+ const rows = [];
+ let row = [], field = '', inQuotes = false;
+ for (let i = 0; i < text.length; i++) {
+   const c = text[i], next = text[i+1];
+   if (inQuotes) {
+     if (c === '"' && next === '"') { field += '"'; i++; }
+     else if (c === '"') { inQuotes = false; }
+     else field += c;
+   } else {
+     if (c === '"') inQuotes = true;
+     else if (c === ',') { row.push(field); field = ''; }
+     else if (c === '\n' || c === '\r') {
+       if (field !== '' || row.length) { row.push(field); rows.push(row); row = []; field = ''; }
+       if (c === '\r' && next === '\n') i++;
+     } else field += c;
+   }
+ }
+ if (field !== '' || row.length) { row.push(field); rows.push(row); }
+ return rows.filter(r => r.length && r.some(x => x.trim() !== ''));
+}
+function looksLikeHeader(row) {
+ const n1 = parseFloat(row[1]), n2 = parseFloat(row[2]);
+ return isNaN(n1) || isNaN(n2);
+}
+async function init() {
+ const status = document.getElementById('status');
+ try {
+   const res = await fetch(CSV_PATH);
+   if (!res.ok) throw new Error('not found');
+   const text = await res.text();
+   const rows = parseCSV(text);
+   if (!rows.length) throw new Error('empty');
+   let dataRows = rows;
+   if (looksLikeHeader(rows[0])) dataRows = rows.slice(1);
+   businesses = dataRows.map(r => ({
+     name: (r[0] || '').trim(),
+     building: (r[1] || '').trim(),
+     workers: parseFloat(r[2]),
+     category: (r[3] || '').trim() || 'Uncategorized',
+     info: (r[4] || '').trim(),
+     website: (r[5] || '').trim()
+   })).filter(b => b.name);
+   if (!businesses.length) throw new Error('no rows parsed');
+   status.style.display = 'none';
+   document.getElementById('controls').style.display = 'flex';
+   render();
+ } catch (e) {
+   status.textContent = `Could not load ${CSV_PATH}. Make sure it's in the same folder as this file, ` +
+     `and that you're opening this page through a local server (not double-clicking the file).`;
+ }
+}
+function render() {
+ const q = document.getElementById('search').value.trim().toLowerCase();
+ let list = businesses.filter(b =>
+   !q ||
+   b.name.toLowerCase().includes(q) ||
+   String(b.building).toLowerCase().includes(q) ||
+   b.category.toLowerCase().includes(q)
+ );
+ document.getElementById('count').textContent = `${list.length} of ${businesses.length}`;
+ //group by category
+ const groups = {};
+ list.forEach(b => {
+   if (!groups[b.category]) groups[b.category] = [];
+   groups[b.category].push(b);
+ });
+ const sortedCategories = Object.keys(groups).sort((a, b) => {
+   const ai = INDUSTRIES.findIndex(i => i.toLowerCase() === a.toLowerCase());
+   const bi = INDUSTRIES.findIndex(i => i.toLowerCase() === b.toLowerCase());
+   return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+ });
+ const container = document.getElementById('groups');
+ container.innerHTML = sortedCategories.map(cat => {
+   const items = groups[cat].sort((a, b) => a.name.localeCompare(b.name));
+   const color = industryColor(cat);
+   const rows = items.map(b => `
+<tr>
+<td class="name" title="${b.name}">${b.name}</td>
+<td>${b.building}</td>
+<td>${isNaN(b.workers) ? '—' : b.workers}</td>
+<td>
+   ${
+     b.website
+       ? `<a class="website-btn" href="${b.website.startsWith('http') ? b.website : 'https://' + b.website}" target="_blank" rel="noopener noreferrer">Visit</a>`
+     : '—'}
+</td>
+</tr>
+`).join('');
+   return `
+<div class="group">
+<div class="group-header" style="background:${color};">
+         ${cat}
+<span class="group-count">${items.length}</span>
+</div>
+<table>
+<thead><tr><th>Business</th><th>Building</th><th>Employees</th><th>Website</th></tr></thead>
+<tbody>${rows}</tbody>
+</table>
+</div>
+   `;
+ }).join('');
+}
+document.getElementById('search').addEventListener('input', render);
+init();
+</script>
+</body>
+</html>

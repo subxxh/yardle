@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Yardle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blueprint: #0c1f33;
+  --blueprint-line: #17324d;
+  --panel: #10263e;
+  --steel: #7fa8c9;
+  --rivet: #4a90d9;
+  --test: #18395D;
+  --rust: #e2833f;
+  --paper: #eef1e8;
+  --dim: #6d879e;
+  --correct: #3f9d63;
+  --close: #d4a83c;
+  --wrong: #B52307;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background-color: var(--blueprint);
+  background-image:
+    linear-gradient(var(--blueprint-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--blueprint-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--paper);
+  font-family: 'IBM Plex Mono', monospace;
+  min-height: 100vh;
+  padding: 32px 16px 80px;
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+header { margin-bottom: 28px; }
+.eyebrow {
+  color: var(--rust);
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+h1 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 800;
+  font-size: 34px;
+  margin: 0;
+  letter-spacing: -0.5px;
+  color: var(--paper);
+}
+h1 span { color: var(--rivet); }
+.sub {
+  color: var(--steel);
+  font-size: 13px;
+  margin-top: 8px;
+  max-width: 46ch;
+  line-height: 1.5;
+}
+#status {
+  color: var(--rust);
+  font-size: 13px;
+  padding: 12px 0;
+}
+#game { display: none; }
+.toprow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+#tally {
+  font-size: 13px;
+  color: var(--steel);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#tally b { color: var(--rust); }
+#timerDisplay {
+  color: var(--close);
+  font-size: 13px;
+  letter-spacing: 1px;
+  display: none;
+}
+.toprow-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.settingsRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 30px;
+  margin-bottom: 18px;
+}
+.settingsRow .label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-right: 2px;
+}
+.btn-outline {
+ transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid var(--rust);
+  color: var(--paper);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 8px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-transform: uppercase;
+  box-shadow: 0 0 6px rgba(218, 113, 75, 0.538);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-outline:hover {
+background: rgba(218, 113, 75, 0.538);
+box-shadow: 0 0 5px rgba(218, 113, 75, 0.538);
+transform: translateY(-1px);
+}
+.btn-outline.active {
+ background: rgba(63,157,99,0.28);
+ border-color: var(--correct);
+ box-shadow: 0 0 6px rgba(63,157,99,0.35);
+}
+.legend-wrap { position: relative; display: inline-block; }
+.legend-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  max-height: 340px;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--blueprint-line);
+  border-radius: 6px;
+  padding: 10px;
+  z-index: 20;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.legend-wrap:hover .legend-panel,
+.legend-wrap:focus-within .legend-panel { display: block; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  padding: 4px 2px;
+  color: var(--paper);
+}
+.legend-swatch {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+#hintBox {
+  display: none;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  background: rgba(212,168,60,0.14);
+  border: 1px solid var(--close);
+  animation: hintAppear 0.35s ease;
+  box-shadow: 0 0 14px rgba(212, 168, 60, 0.12);
+  color: var(--close);
+  font-size: 13px;
+}
+#hintBox b { color: var(--paper); }
+#guessBox { position: relative; margin-bottom: 22px; }
+#guessInput {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  border-radius: 4px;
+  border: 1px solid var(--rivet);
+  background: var(--panel);
+  color: var(--paper);
+  outline: none;
+  transition: all 0.2s ease;
+}
+#guessInput:focus {
+ border-color: var(--rivet);
+ box-shadow:
+   0 0 0 2px rgba(74, 144, 217, 0.2),
+   0 0 18px rgba(74, 144, 217, 0.18)
+}
+#guessInput::placeholder { color: var(--dim); }
+#suggestions {
+  position: absolute;
+  top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--test);
+  border: 1px solid var(--blueprint-line);
+  border-radius: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 5;
+}
+#suggestions div {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 1px solid var(--blueprint-line);
+}
+#suggestions div:last-child { border-bottom: none; }
+#suggestions div:hover { background: rgba(79,140,255,0.12); color: var(--rivet); }
+.board { display: flex; flex-direction: column; gap: 8px; }
+.rowline {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
+  gap: 6px;
+}
+.rowline.head {
+  color: var(--dim);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 0 2px;
+}
+.rowline:not(.head) .cell {transition: transform 0.15s ease, box-shadow 0.15s ease;}
+.rowline:not(.head):hover .cell {box-shadow: 0 0 10px rgba(74, 144, 217, 0.12);}
+.cell.correct {animation: correctPop 0.35s ease;}
+@keyframes correctPop {
+ 0% { transform: scale(0.96); }
+ 60% { transform: scale(1.02); }
+ 100% { transform: scale(1); }
+}
+.cell {
+  background: var(--panel);
+  border-radius: 4px;
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  position: relative;
+  border: 1px solid var(--blueprint-line);
+}
+.cell.name { text-align: left; font-family: 'Archivo', sans-serif; font-weight: 700; }
+.cell.correct { background: var(--correct); border-color: var(--correct); color: var(--paper); }
+.cell.wrong { background: var(--wrong); color: var(--paper); }
+.cell.category {
+  color: var(--paper);
+  background: var(--wrong);
+  border-width: 1px;
+}
+.cell.category.correct {
+background: var(--correct);
+border-color: var(--correct);
+color: var(--paper);
+}
+.arrow { display: block; font-size: 15px; margin-top: 2px; }
+#result {
+  display: none;
+  margin-top: 26px;
+  padding: 20px;
+  border-radius: 6px;
+  background: var(--panel);
+  border: 1px solid var(--dim);
+}
+#result .flag {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  margin: 2px 0 15px;
+  color: var(--rivet);
+}
+#result .company-name {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--rust);
+  margin-top: 12px;
+}
+#result .meta {
+  color: var(--rust);
+  font-size: 12px;
+  margin: 4px 0 10px;
+  letter-spacing: 0.5px;
+}
+#result .time {
+  color: var(--close);
+  font-size: 12px;
+  margin: 0 0 10px;
+  letter-spacing: 0.5px;
+}
+#result .info {
+  color: var(--paper);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.learn-more {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 8px 12px;
+  border-radius: 0px;
+  background: rgba(79,140,255,0.16);
+  color: var(--rust);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.learn-more:hover { background: rgba(79,140,255,0.24); }
+#result.win {
+  border-color: var(--correct);
+  background: rgba(63,157,99,0.14);
+  box-shadow: 0 0 25px rgba(63, 157, 99, 0.2);
+  animation: winAppear 0.4s ease;
+}
+@keyframes winAppear {
+ from {
+   opacity: 0;
+   transform: scale(0.97);
+ }
+ to {
+   opacity: 1;
+   transform: scale(1);
+ }
+}
+#result.win .flag { color: var(--correct); }
+.confetti-piece {
+  position: fixed;
+  top: -20px;
+  z-index: 999;
+  opacity: 0.99;
+  pointer-events: none;
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+@keyframes confetti-fall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0.85; }
+}
+@keyframes hintAppear {
+ from {
+   opacity: 0;
+   transform: translateY(-5px);
+ }
+ to {
+   opacity: 1;
+   transform: translateY(0);
+ }
+}
+.linkButtons {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 44px;
+  flex-wrap: wrap;
+}
+.bigBtn {
+  display: inline-flex;
+  padding: 16px 30px;
+  align-items: center;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  background: var(--rust);
+  color: var(--paper);
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 10px rgba(218, 113, 75, 0.538);
+  transition: all 0.2s ease;
+}
+.bigBtn.secondary {
+  background: transparent;
+  border: 2px solid var(--rust);
+  align-items: center;
+  color: var(--paper);
+}
+.bigBtn:hover { opacity: 0.85; }
+footer {
+  text-align: center;
+  color: var(--dim);
+  font-size: 11px;
+  margin-top: 18px;
+  letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="eyebrow">Brooklyn Navy Yard Development Corp.</div>
+<h1>Yard<span>le</span></h1>
+<div class="sub">Guess the tenant business in 5 tries. Use hints and business directory to narrow it down after each guess.</div>
+</header>
+<div id="status">Loading....</div>
+<div id="game">
+<div class="toprow">
+<div id="tally">Guess <b id="guessNum">1</b> of 5 <span id="timerDisplay"></span></div>
+<div class="toprow-actions">
+<div class="legend-wrap" tabindex="0">
+<button class="btn-outline" type="button">Industries</button>
+<div class="legend-panel" id="legendPanel"></div>
+</div>
+<a href="businesses.html" class="btn-outline">Businesses</a>
+<button class="btn-outline" id="newGameBtn">Play Again!</button>
+</div>
+</div>
+<div class="settingsRow">
+<span class="label">Settings</span>
+<button class="btn-outline active" id="hintsToggle" type="button">Hints: On</button>
+<button class="btn-outline" id="timerToggle" type="button">Timer: Off</button>
+<button class="btn-outline" id="modeToggle" type="button">Mode: Random</button>
+</div>
+<div id="hintBox"></div>
+<div id="guessBox">
+<input id="guessInput" placeholder="Type in a business name…" autocomplete="off" />
+<div id="suggestions"></div>
+</div>
+<div class="board">
+<div class="rowline head">
+<div>Business</div>
+<div>Building</div>
+<div>Employees</div>
+<div id="col4Head">Category</div>
+</div>
+<div class="board" id="guessRows"></div>
+</div>
+<div id="result">
+<div class="flag" id="resultFlag"></div>
+<div class="company-name" id="resultName"></div>
+<div class="meta" id="resultMeta"></div>
+<div class="time" id="resultTime" style="display:none"></div>
+<div class="info" id="resultInfo"></div>
+<a id="resultLink" class="learn-more" href="#" target="_blank" rel="noopener" style="display:none">Learn more!</a>
+</div>
+<div class="linkButtons">
+<a href="businesses.html" class="bigBtn">Businesses →</a>
+<a href="https://www.brooklynnavyyard.org/" target="_blank" rel="noopener" class="bigBtn secondary">BNYDC.org ↗</a>
+</div>
+<footer> The Brooklyn Navy Yard Development Corporation </footer>
+</div>
+<script>
+const CSV_PATH = 'businesses.csv';
+let businesses = [];
+let target = null;
+let guesses = [];
+const MAX_GUESSES = 5;
+const HINT_AT_GUESS = 4; //hint at guess 4
+const LETTER_HINT = 5;
+let hintsEnabled = true;
+let timerMode = false;
+let dailyMode = false;
+let timerInterval = null;
+let timerStart = null;
+let finalElapsedSeconds = null;
+const INDUSTRIES = [
+"CNC Bridge Resource","Advanced Manufacturing","Administrative","Adult Training","Construction",
+"Culinary","Engineering","Finance","Industrial","Internship","Resume Assistance","Retail","Security",
+"Warehouse","Not Applicable","Hardware & Software & Design Engineering","Power & Energy",
+"Biotech & Lab & Medtech","Fabrication & Custom Installation (Wood & Metal)","Architecture & Design",
+"Contracting & Construction","Transportation","Printing & Engraving","Furniture & Home Goods",
+"Apparel & Accessory","Food & Beverage","Beauty & Personal Care","Healthcare",
+"Fine Art & Photography","Creative Office & Media","Other / Professional Services","Education & Nonprofit"
+];
+function industryColor(name) {
+const idx = INDUSTRIES.findIndex(i => i.toLowerCase() === (name || '').trim().toLowerCase());
+if (idx === -1) return 'hsl(210, 12%, 38%)';
+const hue = Math.round(idx * (360 / INDUSTRIES.length));
+return `hsl(${hue}, 62%, 40%)`;
+}
+// A business can occupy multiple buildings (e.g. "31, 32, 35").
+// This pulls out every number found so any one of them can be matched.
+function parseBuildings(value) {
+const raw = (value || '').toString().trim();
+if (!raw) return [];
+const matches = raw.match(/\d+/g);
+return matches ? matches.map(n => parseInt(n, 10)) : [];
+}
+function normalizeWebsite(value) {
+const raw = (value || '').toString().trim();
+if (!raw) return '';
+return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+}
+function buildLegend() {
+const panel = document.getElementById('legendPanel');
+panel.innerHTML = INDUSTRIES.map(name => `
+<div class="legend-item">
+<span class="legend-swatch" style="background:${industryColor(name)}"></span>
+<span>${name}</span>
+</div>
+`).join('');
+}
+function parseCSV(text) {
+const rows = [];
+let row = [], field = '', inQuotes = false;
+for (let i = 0; i < text.length; i++) {
+  const c = text[i], next = text[i+1];
+  if (inQuotes) {
+    if (c === '"' && next === '"') { field += '"'; i++; }
+    else if (c === '"') { inQuotes = false; }
+    else field += c;
+  } else {
+    if (c === '"') inQuotes = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (field !== '' || row.length) { row.push(field); rows.push(row); row = []; field = ''; }
+      if (c === '\r' && next === '\n') i++;
+    } else field += c;
+  }
+}
+if (field !== '' || row.length) { row.push(field); rows.push(row); }
+return rows.filter(r => r.length && r.some(x => x.trim() !== ''));
+}
+function looksLikeHeader(row) {
+const n1 = parseFloat(row[1]), n2 = parseFloat(row[2]);
+return isNaN(n1) || isNaN(n2);
+}
+async function init() {
+buildLegend();
+const status = document.getElementById('status');
+try {
+  const res = await fetch(CSV_PATH);
+  if (!res.ok) throw new Error('not found');
+  const text = await res.text();
+  const rows = parseCSV(text);
+  if (!rows.length) throw new Error('empty');
+  let dataRows = rows;
+  let col4Name = 'Category';
+  if (looksLikeHeader(rows[0])) {
+    col4Name = rows[0][3] || 'Category';
+    dataRows = rows.slice(1);
+  }
+  businesses = dataRows.map(r => ({
+    name: (r[0] || '').trim(),
+    buildingDisplay: (r[1] || '').trim(),
+    building: parseBuildings(r[1]),
+    workers: parseFloat(r[2]),
+    category: (r[3] || '').trim(),
+    info: (r[4] || '').trim(),
+    website: (r[5] || '').trim()
+  })).filter(b => b.name);
+  if (!businesses.length) throw new Error('no rows parsed');
+  document.getElementById('col4Head').textContent = col4Name;
+  status.style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+  startGame();
+} catch (e) {
+  status.textContent = `Could not load ${CSV_PATH}. Make sure it's in the same folder as this file, ` +
+    `and that you're opening this page through a local server (not double-clicking the file) ` +
+    `browsers block local file reads otherwise. Run: python3 -m http.server, then open localhost.`;
+}
+}
+// Simple deterministic hash so every visitor gets the same daily target.
+function hashString(str) {
+ let hash = 0;
+ for (let i = 0; i < str.length; i++) {
+   hash = (hash << 5) - hash + str.charCodeAt(i);
+   hash |= 0;
+ }
+ return Math.abs(hash);
+}
+function getDailyTarget() {
+ const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+ const idx = hashString(dateStr) % businesses.length;
+ return businesses[idx];
+}
+function pickTarget() {
+ return dailyMode ? getDailyTarget() : businesses[Math.floor(Math.random() * businesses.length)];
+}
+function startGame() {
+target = pickTarget();
+guesses = [];
+document.getElementById('result').style.display = 'none';
+document.getElementById('result').classList.remove('win');
+document.getElementById('guessRows').innerHTML = '';
+document.getElementById('guessInput').value = '';
+document.getElementById('guessInput').disabled = false;
+document.getElementById('guessInput').focus();
+document.getElementById('hintBox').style.display = 'none';
+document.getElementById('newGameBtn').textContent = dailyMode ? 'Restart Today\u2019s Business' : 'Play Again!';
+updateTally();
+stopTimer();
+if (timerMode) startTimer();
+}
+function updateTally() {
+document.getElementById('guessNum').textContent = Math.min(guesses.length + 1, MAX_GUESSES);
+}
+function startTimer() {
+ timerStart = Date.now();
+ const el = document.getElementById('timerDisplay');
+ el.style.display = 'inline';
+ updateTimerDisplay();
+ timerInterval = setInterval(updateTimerDisplay, 100);
+}
+function stopTimer() {
+ if (timerInterval) clearInterval(timerInterval);
+ timerInterval = null;
+ const el = document.getElementById('timerDisplay');
+ if (!timerMode) el.style.display = 'none';
+}
+function updateTimerDisplay() {
+ const el = document.getElementById('timerDisplay');
+ if (!el || !timerStart) return;
+ const elapsed = (Date.now() - timerStart) / 1000;
+ el.textContent = `\u23F1 ${elapsed.toFixed(1)}s`;
+}
+function maybeShowHint() {
+const hintBox = document.getElementById('hintBox');
+if (!hintsEnabled) { hintBox.style.display = 'none'; return; }
+let html = null;
+if (guesses.length >= LETTER_HINT - 1) {
+  const firstLetter = target.name.trim().charAt(0).toUpperCase();
+  html = `Final hint: the business starts with <b>${firstLetter}</b>`;
+} else if (guesses.length >= HINT_AT_GUESS - 1) {
+  html = `Hint: the category is <b>${target.category || 'Uncategorized'}</b>`;
+}
+if (!html) { hintBox.style.display = 'none'; return; }
+hintBox.style.display = 'block';
+hintBox.innerHTML = html;
+// restart the CSS animation on every new hint, not just the first time
+hintBox.style.animation = 'none';
+void hintBox.offsetWidth; // force reflow
+hintBox.style.animation = '';
+}
+function numericCell(guessVal, targetVal) {
+if (isNaN(guessVal) || isNaN(targetVal)) return { cls: 'wrong', arrow: '' };
+if (guessVal === targetVal) return { cls: 'correct', arrow: '' };
+return guessVal > targetVal
+  ? { cls: 'wrong', arrow: '<span class="arrow">▼ lower</span>' }
+  : { cls: 'wrong', arrow: '<span class="arrow">▲ higher</span>' };
+}
+//Buildings can be multi-valued. Correct if ANY guess building matches ANY target building.
+function buildingCell(guessBuildings, targetBuildings) {
+if (!guessBuildings.length || !targetBuildings.length) return { cls: 'wrong', arrow: '' };
+const overlap = guessBuildings.some(g => targetBuildings.includes(g));
+if (overlap) return { cls: 'correct', arrow: '' };
+let closestDiff = Infinity, direction = null;
+guessBuildings.forEach(g => {
+  targetBuildings.forEach(t => {
+    const diff = Math.abs(g - t);
+    if (diff < closestDiff) {
+      closestDiff = diff;
+      direction = g > t ? 'lower' : 'higher';
+    }
+  });
+});
+return {
+  cls: 'wrong',
+  arrow: direction === 'lower'
+    ? '<span class="arrow">▼ lower</span>'
+    : '<span class="arrow">▲ higher</span>'
+};
+}
+function categoryCell(guessVal, targetVal) {
+const match = guessVal && targetVal && guessVal.toLowerCase() === targetVal.toLowerCase();
+return { text: guessVal || '—', match };
+}
+function submitGuess(name) {
+const guess = businesses.find(b => b.name.toLowerCase() === name.toLowerCase());
+if (!guess) return;
+if (guesses.some(g => g.name.toLowerCase() === guess.name.toLowerCase())) return;
+guesses.push(guess);
+const bCell = buildingCell(guess.building, target.building);
+const workersCell = numericCell(guess.workers, target.workers);
+const catCell = categoryCell(guess.category, target.category);
+const row = document.createElement('div');
+row.className = 'rowline';
+document.getElementById('guessRows').prepend(row);
+document.getElementById('guessInput').value = '';
+document.getElementById('suggestions').innerHTML = '';
+const won = guess.name.toLowerCase() === target.name.toLowerCase();
+row.innerHTML = `
+<div class="cell name ${won ? 'correct' : ''}">${guess.name}</div>
+<div class="cell ${won ? 'correct' : bCell.cls}">${guess.buildingDisplay || '—'}${won ? '' : bCell.arrow}</div>
+<div class="cell ${won ? 'correct' : workersCell.cls}">${isNaN(guess.workers) ? '—' : guess.workers}${won ? '' : workersCell.arrow}</div>
+<div class="cell category ${won || catCell.match ? 'correct' : ''}" title="${catCell.text}">${catCell.text}</div>
+`;
+if (won) {
+endGame(true);
+} else {
+updateTally();
+maybeShowHint();
+if (guesses.length >= MAX_GUESSES) {
+  endGame(false);
+}
+}
+}
+function endGame(won) {
+stopTimer();
+if (timerMode && timerStart) {
+  finalElapsedSeconds = (Date.now() - timerStart) / 1000;
+} else {
+  finalElapsedSeconds = null;
+}
+const result = document.getElementById('result');
+ result.style.display = 'block';
+ result.classList.toggle('win', won);
+document.getElementById('guessInput').disabled = true;
+document.getElementById('result').style.display = 'block';
+document.getElementById('hintBox').style.display = 'none';
+document.getElementById('resultFlag').textContent = won
+  ? `Correct! Solved in ${guesses.length}!`
+  : `OUT OF GUESSES ☹️`;
+document.getElementById('resultName').textContent = target.name;
+const buildingLabel = target.buildingDisplay ? `Building ${target.buildingDisplay}` : 'Building —';
+document.getElementById('resultMeta').textContent =
+  `${buildingLabel}, Brooklyn Navy Yard • ${target.category || 'Uncategorized'}`;
+const timeEl = document.getElementById('resultTime');
+if (finalElapsedSeconds !== null) {
+  timeEl.style.display = 'block';
+  timeEl.textContent = `\u23F1 Time: ${finalElapsedSeconds.toFixed(1)}s`;
+} else {
+  timeEl.style.display = 'none';
+}
+document.getElementById('resultInfo').textContent = target.info || '(no info provided)';
+const resultLink = document.getElementById('resultLink');
+const website = normalizeWebsite(target.website);
+if (website) {
+  resultLink.href = website;
+  resultLink.style.display = 'inline-flex';
+  resultLink.textContent = 'Learn more!';
+} else {
+  resultLink.removeAttribute('href');
+  resultLink.style.display = 'none';
+}
+if (won) {
+ launchConfetti();
+}
+}
+function launchConfetti() {
+const colors = ['#FFABC6', '#FFD1AB', '#ADAEFF', '#B6FFB0', '#AFFFAD', '#FFFFAD', '#ffffff'];
+for (let i = 0; i < 180; i++) {
+  const piece = document.createElement('div');
+  piece.className = 'confetti-piece';
+  piece.style.left = Math.random() * 100 + 'vw';
+  piece.style.width = 6 + Math.random() * 8 + 'px';
+  piece.style.height = 8 + Math.random() * 10 + 'px';
+  piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+  piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+  piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+  document.body.appendChild(piece);
+  setTimeout(() => piece.remove(), 4000);
+}
+}
+document.getElementById('guessInput').addEventListener('input', (e) => {
+const val = e.target.value.trim().toLowerCase();
+const box = document.getElementById('suggestions');
+box.innerHTML = '';
+if (!val) return;
+const guessedNames = new Set(guesses.map(g => g.name.toLowerCase()));
+const matches = businesses
+  .filter(b => b.name.toLowerCase().includes(val) && !guessedNames.has(b.name.toLowerCase()))
+  .slice(0, 8);
+matches.forEach(b => {
+  const div = document.createElement('div');
+  div.textContent = b.name;
+  div.onclick = () => submitGuess(b.name);
+  box.appendChild(div);
+});
+});
+document.getElementById('guessInput').addEventListener('keydown', (e) => {
+if (e.key === 'Enter') {
+  const val = e.target.value.trim();
+  const match = businesses.find(b => b.name.toLowerCase() === val.toLowerCase());
+  if (match) submitGuess(match.name);
+}
+});
+document.getElementById('newGameBtn').addEventListener('click', startGame);
+document.getElementById('hintsToggle').addEventListener('click', (e) => {
+ hintsEnabled = !hintsEnabled;
+ e.target.textContent = `Hints: ${hintsEnabled ? 'On' : 'Off'}`;
+ e.target.classList.toggle('active', hintsEnabled);
+ if (hintsEnabled) {
+   maybeShowHint();
+ } else {
+   document.getElementById('hintBox').style.display = 'none';
+ }
+});
+document.getElementById('timerToggle').addEventListener('click', (e) => {
+ timerMode = !timerMode;
+ e.target.textContent = `Timer: ${timerMode ? 'On' : 'Off'}`;
+ e.target.classList.toggle('active', timerMode);
+ if (timerMode) {
+   startTimer();
+ } else {
+   stopTimer();
+ }
+});
+document.getElementById('modeToggle').addEventListener('click', (e) => {
+ dailyMode = !dailyMode;
+ e.target.textContent = `Mode: ${dailyMode ? 'Daily' : 'Random'}`;
+ e.target.classList.toggle('active', dailyMode);
+ startGame();
+});
+init();
+</script>
+</body>
+</html>
